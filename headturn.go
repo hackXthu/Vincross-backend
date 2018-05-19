@@ -10,6 +10,7 @@ import (
   	"mind/core/framework/drivers/hexabody"
   	"mind/core/framework/log"
 	"mind/core/framework/drivers/media"
+	"net/http"
 )
 
 const (
@@ -91,10 +92,32 @@ func (d *headturn) OnConnect() {
 			
 			var s float64 = float64(robo.DiskSpace)/1024/1024/1024 // cs
 			log.Info.Println("Available diskspace is ", s, "G") // cs
+
+			err := media.Start()
+			if err != nil {
+			log.Error.Println("Media start err:", err)
+			return
+			}
+			for {
+			log.Info.Println("Connected")
+			buf := new(bytes.Buffer)
+			log.Info.Println("JPEG")
+			jpeg.Encode(buf, media.SnapshotYCbCr(), nil)
+			log.Info.Println("BASE64")
+			str := base64.StdEncoding.EncodeToString(buf.Bytes())
+			log.Info.Println("SENDING")
+			framework.SendString(str)
+			log.Info.Println("Sent:", str[:20], len(str))
+			}
+			resp, err := http.Post("http://example.com/upload", "image/jpeg", &buf)
+
 			// 上传
 		}
 
 		}
+
+	
+
 	}
 
 
